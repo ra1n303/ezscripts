@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Function to perform 1337 transformations
+leet_transform() {
+    local input="$1"
+    echo "$input" | sed -e 's/a/4/g' \
+                        -e 's/e/3/g' \
+                        -e 's/i/1/g' \
+                        -e 's/l/1/g' \
+                        -e 's/o/0/g' \
+                        -e 's/s/5/g' \
+                        -e 's/t/7/g'
+}
+
+# Function to handle file input
+process_file() {
+    local file_input="$1"
+    local file_output="dic_1337.txt"
+
+    # Transformations in basic 1337 format using sed tool
+    sed -e 's/a/4/g' \
+        -e 's/e/3/g' \
+        -e 's/i/1/g' \
+        -e 's/l/1/g' \
+        -e 's/o/0/g' \
+        -e 's/s/5/g' \
+        -e 's/t/7/g' \
+        "$file_input" > temp_1337.txt
+
+    # Merge original and transformed words, removing duplicates and unnecessary capital letters
+    cat "$file_input" temp_1337.txt | tr '[:upper:]' '[:lower:]' | sort | uniq > "$file_output"
+
+    # Clean temp file
+    rm temp_1337.txt
+
+    # Show success
+    echo "The dictionary in 1337 format was saved in: $file_output"
+}
+
+# Main script logic
+if [ "$#" -eq 1 ]; then
+    if [ -f "$1" ]; then
+        # If the argument is a file, process it
+        process_file "$1"
+    else
+        # If the argument is a string, transform it directly
+        leet_transform "$1"
+    fi
+elif [ "$#" -eq 0 ]; then
+    # Interactive mode if no arguments are provided
+    echo "No input provided. Please enter a string to transform:"
+    read -r user_input
+    leet_transform "$user_input"
+else
+    echo "Usage: $0 [file|string]"
+    exit 1
+fi
